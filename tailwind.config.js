@@ -4,7 +4,8 @@ module.exports = {
   theme: {
     extend: {},
     fontFamily: {
-      'open':'"Montserrat", serif'
+      'open':'"Montserrat", serif',
+      'out':'"Outfit", serif'
     },
   },
   plugins: [],
