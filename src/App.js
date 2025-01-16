@@ -2,7 +2,7 @@ import axios from 'axios';
 import './App.css';
 import earth from "./images/wallpaper.jpg";
 import { useEffect, useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Text } from "recharts";
 import { Link } from 'react-router-dom';
 
 
@@ -213,6 +213,7 @@ function App() {
               {/*}
           {/* Chart Section */}
           <div className="w-full h-full overflow-x-scroll backdrop-blur-xl bg-black/30 rounded-lg">
+         
             <ResponsiveContainer width="100%" height={400}>
               <LineChart data={data} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
