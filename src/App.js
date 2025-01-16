@@ -45,6 +45,7 @@ function App() {
     populationincrease: "",
   });
   const [search, setSearch] = useState([]);
+  const [option,setoption]=useState({opt:0,title:"country prediction"});
 
   useEffect(() => {
     axios.get('/dash')
@@ -59,7 +60,9 @@ function App() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    console.log(formData)
     setFormData((prev) => ({ ...prev, [name]: value }));
+
   };
 
   const handleCountryChange = (e) => {
@@ -76,26 +79,27 @@ function App() {
     event.preventDefault();
     setData([]);
 
-    const { country, gdp, population, startyear, endyear, populationincrease } = formData;
+    const { country, gdp, population, startyear, endyear, populationincrease,sector } = formData;
     let i = 0;
 
     const interval = setInterval(async () => {
-      if (i === Number(endyear) - Number(startyear) + 1) {
+      if (i == Number(endyear) - Number(startyear) + 1) {
         clearInterval(interval);
       } else {
         try {
-          const res = await axios.get(`/predict_co2/${country}/${gdp}/${Number(population) + (populationincrease * i)}/${Number(startyear) + i}/`);
+          const year=Number(startyear) + i
+          const res = await axios.get(`/predict_co2/${option.opt == 1?"world":option.opt == 2?sector:country}/${gdp}/${Number(population) + (populationincrease * i)}/${year}/`);
           setData((prevData) => [
             ...prevData,
             {
-              year: `${Number(startyear) + i}`,
+              year: year,
               prediction: res.data.prediction,
             },
           ]);
         } catch (err) {
           console.error('Error fetching prediction:', err);
         }
-        i++;
+        i=i+1;
       }
     }, 1000);
   };
@@ -104,11 +108,27 @@ function App() {
     <div>
       <div className="bg-no-repeat bg-cover" style={{ backgroundImage: `url('${earth}')` }}>
         <div className={`gap-5 w-screen overflow-hidden h-screen box-border p-5  ${dash === "User not logged in" ? " hidden" : " flex"}`}>
-          {/* Form Section */}
+          {/*Navigation Bar*/}
+          <div className='box-border p-5 h-full backdrop-blur-xl gap-5 flex flex-col bg-black/30 rounded-lg'>
+            <button onClick={()=>{setoption({opt:0,title:"country prediction"})}} className={' text-white rounded-lg w-16 h-16' + (option.opt==0?" bg-green-600":" ")}>
+              <i className='fa fa-line-chart text-2xl'></i>
+            </button>
+            <button onClick={()=>{setoption({opt:1,title:"world prediction"})}} className={' text-white rounded-lg w-16 h-16'+ (option.opt==1?" bg-green-600":" ")}>
+            <i className='fa fa-globe text-3xl'></i>
+            </button>
+            <button onClick={()=>{setoption({opt:2,title:"sector prediction"})}} className={' text-white rounded-lg w-16 h-16'+ (option.opt==2?" bg-green-600":" ")}>
+            <i className='fa fa-users text-2xl'></i>
+            </button>
+            <button onClick={()=>{window.location.reload();axios.get("/logout")}} className=' text-red-700 rounded-lg w-16 h-16'>
+            <i className='fa fa-sign-out text-3xl'></i>
+            </button>
+          </div>
+          {/* Form Section - normal */}
           <div className="w-fit box-border p-5 h-full backdrop-blur-xl flex flex-col bg-black/30 rounded-lg">
-            <h3 className="uppercase text-white mx-auto font-bold text-2xl my-6">Prediction</h3>
+            <h3 className="uppercase text-white mx-auto font-bold text-2xl my-6">{option.title}</h3>
             <form className='mx-auto flex flex-col relative' onSubmit={FormSubmit}>
-              <input
+            <div className={option.opt == 0?" block": " hidden"}>
+            <input
                 onChange={handleCountryChange}
                 id="country"
                 name="country"
@@ -117,6 +137,7 @@ function App() {
                 required
                 placeholder='Enter Country name'
                 type='text'
+                disabled={option.opt != 0}
               />
               <div className='absolute flex flex-col gap-2 top-12'>
                 {search.map((item, index) => (
@@ -133,6 +154,12 @@ function App() {
                   </button>
                 ))}
               </div>
+            </div>
+            <select onClick={handleInputChange} name='sector' className={"px-2 w-80 py-3 outline-none bg-white/40 mb-6 placeholder:text-gray-800 rounded text-sm"+(option.opt == 2?" block": " hidden")}>
+              <option value="International aviation">International aviation</option>
+              <option value="International shipping">International shipping</option>
+              <option value="International transport">International transport</option>
+            </select>
               <input
                 name="gdp"
                 value={formData.gdp}
@@ -183,7 +210,7 @@ function App() {
               </button>
             </form>
           </div>
-
+              {/*}
           {/* Chart Section */}
           <div className="w-full h-full overflow-x-scroll backdrop-blur-xl bg-black/30 rounded-lg">
             <ResponsiveContainer width="100%" height={400}>
