@@ -43,6 +43,8 @@ function App() {
     startyear: "",
     endyear: "",
     populationincrease: "",
+    algorithm:"Random Forest"
+    
   });
   const [search, setSearch] = useState([]);
   const [option,setoption]=useState({opt:0,title:"country prediction"});
@@ -76,33 +78,36 @@ function App() {
   };
 
   const FormSubmit = async (event) => {
+    console.log("hi");
     event.preventDefault();
     setData([]);
-
-    const { country, gdp, population, startyear, endyear, populationincrease,sector } = formData;
-    let i = 0;
-
-    const interval = setInterval(async () => {
-      if (i == Number(endyear) - Number(startyear) + 1) {
-        clearInterval(interval);
-      } else {
-        try {
-          const year=Number(startyear) + i
-          const res = await axios.get(`/predict_co2/${option.opt == 1?"world":option.opt == 2?sector:country}/${gdp}/${Number(population) + (populationincrease * i)}/${year}/`);
-          setData((prevData) => [
-            ...prevData,
-            {
-              year: year,
-              prediction: res.data.prediction,
-            },
-          ]);
-        } catch (err) {
-          console.error('Error fetching prediction:', err);
-        }
-        i=i+1;
+  
+    const { country, gdp, population, startyear, endyear, populationincrease, sector, algorithm } = formData;
+  
+    try {
+      for (let i = 0; i <= Number(endyear) - Number(startyear); i++) {
+        const year = Number(startyear) + i;
+        console.log(year);
+  
+        const response = await axios.get(
+          `/${algorithm === "Random Forest" ? "predict_co2" : "arima"}/${
+            option.opt === 1 ? "world" : option.opt === 2 ? sector : country
+          }/${gdp}/${Number(population) + populationincrease * i}/${year}/`
+        );
+  
+        setData((prevData) => [
+          ...prevData,
+          {
+            year: year,
+            prediction: response.data.prediction,
+          },
+        ]);
       }
-    }, 1000);
+    } catch (err) {
+      console.error("Error fetching prediction:", err);
+    }
   };
+  
 
   return (
     <div>
@@ -126,6 +131,10 @@ function App() {
           {/* Form Section - normal */}
           <div className="w-fit box-border p-5 h-full backdrop-blur-xl flex flex-col bg-black/30 rounded-lg">
             <h3 className="uppercase text-white mx-auto font-bold text-2xl my-6">{option.title}</h3>
+             <select onClick={handleInputChange} name='algorithm' className="px-2 w-80 py-3 outline-none bg-white/40 mb-6 placeholder:text-gray-800 rounded text-sm">
+                  <option value="Random Forest">Random Forest</option>
+                  <option value="Linear Regression">Linear Regression</option>
+                </select>
             <form className='mx-auto flex flex-col relative' onSubmit={FormSubmit}>
             <div className={option.opt == 0?" block": " hidden"}>
             <input
@@ -205,6 +214,7 @@ function App() {
                 placeholder='Enter Ending Year'
                 type='number'
               />
+              
               <button type="submit" className="w-full rounded-full mt-5 text-lg bg-green-600 text-white py-2 uppercase tracking-wider font-bold">
                 Predict
               </button>
@@ -212,8 +222,38 @@ function App() {
           </div>
               {/*}
           {/* Chart Section */}
-          <div className="w-full h-full overflow-x-scroll backdrop-blur-xl bg-black/30 rounded-lg">
-         
+          <div className="w-full h-full overflow-x-scroll overflow-hidden relative backdrop-blur-xl bg-black/30 rounded-lg">
+         <div className=' m-7 p-5 box-border rounded-lg text-white'>
+          <h1 className='text-center mb-8 text-2xl uppercase font-bold'>CO2 Prediction</h1>
+
+          <table className="w-full text-center border-collapse">
+  <thead>
+    <tr className="border-2">
+      <th className="p-1">Parameters</th>
+      <th className="p-1">Values</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr className="border-x-2">
+      <td className="p-1">Algorithm</td>
+      <td className="p-1">{formData.algorithm}</td>
+    </tr>
+    <tr className="border-x-2">
+      <td className="p-1">Country / Sector</td>
+      <td className="p-1">{formData.country ? formData.country : "No Data"}</td>
+    </tr>
+    <tr className="border-x-2 border-b-2">
+      <td className="p-1">Year</td>
+      <td className="p-1">
+        {formData.startyear ? formData.startyear + "-" + formData.endyear : "No Data"}
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+         </div>
+
+         <div className={'absolute left-1/2 top-[60vh] text-white/50 text-lg ' + (data.length?" hidden":" block")}>No Data for Prediction</div>
             <ResponsiveContainer width="100%" height={400}>
               <LineChart data={data} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
