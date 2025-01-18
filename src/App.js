@@ -35,6 +35,7 @@ const countryList=["Afghanistan","Africa","Africa (GCP)","Albania","Algeria","An
 
 function App() {
   const [data, setData] = useState([]);
+  const [tips,settips]=useState({pros:"",cons:"",text:""});
   const [dash, setDash] = useState();
   const [formData, setFormData] = useState({
     country: "",
@@ -87,14 +88,14 @@ function App() {
     try {
       for (let i = 0; i <= Number(endyear) - Number(startyear); i++) {
         const year = Number(startyear) + i;
-        console.log(year);
+        
   
         const response = await axios.get(
           `/${algorithm === "Random Forest" ? "predict_co2" : "arima"}/${
             option.opt === 1 ? "world" : option.opt === 2 ? sector : country
           }/${gdp}/${Number(population) + populationincrease * i}/${year}/`
         );
-  
+       settips(response.data.tips)
         setData((prevData) => [
           ...prevData,
           {
@@ -223,38 +224,19 @@ function App() {
               {/*}
           {/* Chart Section */}
           <div className="w-full h-full overflow-x-scroll overflow-hidden relative backdrop-blur-xl bg-black/30 rounded-lg">
-         <div className=' m-7 p-5 box-border rounded-lg text-white'>
-          <h1 className='text-center mb-8 text-2xl uppercase font-bold'>CO2 Prediction</h1>
-
-          <table className="w-full text-center border-collapse">
-  <thead>
-    <tr className="border-2">
-      <th className="p-1">Parameters</th>
-      <th className="p-1">Values</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr className="border-x-2">
-      <td className="p-1">Algorithm</td>
-      <td className="p-1">{formData.algorithm}</td>
-    </tr>
-    <tr className="border-x-2">
-      <td className="p-1">Country / Sector</td>
-      <td className="p-1">{formData.country ? formData.country : "No Data"}</td>
-    </tr>
-    <tr className="border-x-2 border-b-2">
-      <td className="p-1">Year</td>
-      <td className="p-1">
-        {formData.startyear ? formData.startyear + "-" + formData.endyear : "No Data"}
-      </td>
-    </tr>
-  </tbody>
-</table>
+         <div className=' m-7 p-5 box-border rounded-lg text-black bg-white/35'>
+          
+               <div className='flex justify-between mb-3'> <p><b>Algorithm</b><br/>{formData.algorithm}</p>
+                <p><b>Country / Sector</b><br/>{formData.country ? formData.country : "No Data"}</p>
+                <p><b>Year</b> <br/> {formData.startyear ? formData.startyear + "-" + formData.endyear : "No Data"}</p></div>
+                {tips.text?<div><p><b>Pros</b><br/>{tips.pros}</p>
+                <p><b>Cons</b><br/>{tips.cons}</p>
+                <p><b>Tips</b><br/>{tips.text}</p></div>:""}
+          
 
          </div>
 
-         <div className={'absolute left-1/2 top-[60vh] text-white/50 text-lg ' + (data.length?" hidden":" block")}>No Data for Prediction</div>
-            <ResponsiveContainer width="100%" height={400}>
+            <ResponsiveContainer width="100%" height="50%">
               <LineChart data={data} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="year" stroke="#ffffff" />
